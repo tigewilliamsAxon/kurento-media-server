@@ -29,6 +29,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/asio/ip/basic_endpoint.hpp>
+#include <boost/asio/ssl/context.hpp>
 
 #include <memory>
 #include <type_traits>
@@ -191,6 +192,8 @@ WebSocketTransport::initSecureWebSocket (
       config.get<uint16_t> ("mediaServer.net.websocket.secure.port", 0);
   const uint connqueue = config.get<uint> (
       "mediaServer.net.websocket.connqueue", WEBSOCKET_CONNQUEUE_DEFAULT);
+  const std::string ciphers = config.get<std::string> (
+          "mediaServer.crypto.ciphers", "");
 
   if (securePort == 0) {
     return;
@@ -245,12 +248,14 @@ WebSocketTransport::initSecureWebSocket (
           & WebSocketTransport::processMessage,
       this, &secureServer, std::placeholders::_1, std::placeholders::_2));
   secureServer.set_tls_init_handler (
-      [password, certificateFile] (
+      [password, certificateFile, ciphers] (
           websocketpp::connection_hdl hdl) -> context_ptr {
         context_ptr context (
             new boost::asio::ssl::context (boost::asio::ssl::context::sslv23));
 
         try {
+          setCipherList (context, ciphers);
+
           context->set_options (boost::asio::ssl::context::default_workarounds
               | boost::asio::ssl::context::single_dh_use
 
@@ -308,6 +313,24 @@ WebSocketTransport::initSecureWebSocket (
           ep.address ().to_string ().c_str (), ep.port ());
     }
   }
+}
+
+void
+setCipherList (context_ptr context, const std::string &ciphers)
+{
+  if (ciphers.empty()) {
+    GST_DEBUG ("Using default cipher list");
+    return;
+  }
+
+  if (!SSL_CTX_set_cipher_list (context->native_handle(), ciphers.c_str())) {
+    GST_ERROR ("No valid cipher could be selected from supplied ciphers");
+    exit (1);
+  }
+
+#ifdef SSL_CTRL_SET_ECDH_AUTO
+  SSL_CTX_set_ecdh_auto(context->native_handle(), 1);
+#endif
 }
 
 void
