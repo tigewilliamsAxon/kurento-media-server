@@ -38,8 +38,6 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define GST_DEFAULT_NAME "KurentoWebSocketTransport"
 
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
-
 namespace kurento
 {
 
@@ -254,7 +252,7 @@ WebSocketTransport::initSecureWebSocket (
             new boost::asio::ssl::context (boost::asio::ssl::context::sslv23));
 
         try {
-          setCipherList (context, ciphers);
+          WebSocketTransport::setCipherList (context, ciphers);
 
           context->set_options (boost::asio::ssl::context::default_workarounds
               | boost::asio::ssl::context::single_dh_use
@@ -316,13 +314,15 @@ WebSocketTransport::initSecureWebSocket (
 }
 
 void
-setCipherList (context_ptr context, const std::string &ciphers)
+WebSocketTransport::setCipherList (context_ptr context,
+    const std::string &ciphers)
 {
   if (ciphers.empty()) {
     GST_DEBUG ("Using default cipher list");
     return;
   }
 
+  GST_DEBUG ("Using supplied cipher list:\n%s", ciphers.c_str());
   if (!SSL_CTX_set_cipher_list (context->native_handle(), ciphers.c_str())) {
     GST_ERROR ("No valid cipher could be selected from supplied ciphers");
     exit (1);
