@@ -361,7 +361,7 @@ WebSocketTransport::setMinTlsVersion (context_ptr context,
     // nothing to do here; TLS 1.0 is the lowest supported version.
   } else if ("tls1.1" == min_tls) {
     #if SUPPORTS_SET_MIN_TLS_PROTO
-      if (!::SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_1_VERSION)) {
+      if (!SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_1_VERSION)) {
         GST_ERROR ("Error setting minimum TLS version to 1.1");
       }
     #else
@@ -369,7 +369,7 @@ WebSocketTransport::setMinTlsVersion (context_ptr context,
     #endif
   } else if ("tls1.2" == min_tls) {
     #if SUPPORTS_SET_MIN_TLS_PROTO
-      if (!::SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_2_VERSION)) {
+      if (!SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_2_VERSION)) {
         GST_ERROR ("Error setting minimum TLS version to 1.2");
       }
     #else
