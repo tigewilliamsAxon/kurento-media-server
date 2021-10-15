@@ -1,5 +1,10 @@
 {
   "mediaServer": {
+    "crypto" : {
+      "//": "List of ciphers to use.  If not supplied, then the default set of ciphers from OpenSSL will be used.",
+      "//": "Formatted as a colon delimited list.  See https://www.openssl.org/docs/manmaster/man1/ciphers.html0",
+      "ciphers": ""
+    },
     "resources": {
       "//": "KMS will raise an error when reaching this usage% of Kernel resources",
       "//": "Applies to allowed number of threads, and number of open file descriptors",

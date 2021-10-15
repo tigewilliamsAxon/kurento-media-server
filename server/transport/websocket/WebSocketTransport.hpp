@@ -31,6 +31,8 @@ typedef websocketpp::server<websocketpp::config::asio> WebSocketServer;
 typedef websocketpp::server<websocketpp::config::asio_tls>
 SecureWebSocketServer;
 
+typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+
 namespace kurento
 {
 
@@ -55,6 +57,8 @@ private:
   void initRegistrar (const boost::property_tree::ptree &config);
 
   websocketpp::connection_hdl getConnection (const std::string &sessionId);
+
+  static void setCipherList (context_ptr context, const std::string &ciphers);
 
   template <typename ServerType>
   void processMessage (ServerType *s, websocketpp::connection_hdl hdl,
