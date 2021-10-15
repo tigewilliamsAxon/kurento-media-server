@@ -30,6 +30,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/asio/ip/basic_endpoint.hpp>
 #include <boost/asio/ssl/context.hpp>
+#include <openssl/ssl.h>
 
 #include <memory>
 #include <type_traits>
@@ -199,7 +200,9 @@ WebSocketTransport::initSecureWebSocket (
   const uint connqueue = config.get<uint> (
       "mediaServer.net.websocket.connqueue", WEBSOCKET_CONNQUEUE_DEFAULT);
   const std::string ciphers = config.get<std::string> (
-          "mediaServer.crypto.ciphers", "");
+      "mediaServer.crypto.ciphers", "");
+  const std::string min_tls = config.get<std::string> (
+      "mediaServer.crypto.min_tls", "");
 
   if (securePort == 0) {
     return;
@@ -254,7 +257,7 @@ WebSocketTransport::initSecureWebSocket (
           & WebSocketTransport::processMessage,
       this, &secureServer, std::placeholders::_1, std::placeholders::_2));
   secureServer.set_tls_init_handler (
-      [password, certificateFile, ciphers] (
+      [password, certificateFile, ciphers, min_tls] (
           websocketpp::connection_hdl hdl) -> context_ptr {
         context_ptr context (
             new boost::asio::ssl::context (boost::asio::ssl::context::sslv23));
@@ -271,6 +274,9 @@ WebSocketTransport::initSecureWebSocket (
               // https://www.openssl.org/docs/man1.0.2/man3/TLSv1_method.html
               | boost::asio::ssl::context::no_sslv2
               | boost::asio::ssl::context::no_sslv3);
+
+          WebSocketTransport::setMinTlsVersion (context, min_tls);
+
           context->set_password_callback (
               std::bind ([password] () -> std::string { return password; }));
           context->use_certificate_chain_file (certificateFile.string ());
@@ -339,6 +345,39 @@ WebSocketTransport::setCipherList (context_ptr context,
 #ifdef SSL_CTRL_SET_ECDH_AUTO
   SSL_CTX_set_ecdh_auto(context->native_handle(), 1);
 #endif
+}
+
+void
+WebSocketTransport::setMinTlsVersion (context_ptr context,
+    const std::string &min_tls)
+{
+  if (min_tls.empty()) {
+    GST_DEBUG ("No min TLS version provided");
+    return;
+  }
+
+  GST_DEBUG ("Using TLS %s or higher", min_tls.c_str());
+  if ("tls1.0" == min_tls) {
+    // nothing to do here; TLS 1.0 is the lowest supported version.
+  } else if ("tls1.1" == min_tls) {
+    #if SUPPORTS_SET_MIN_TLS_PROTO
+      if (!::SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_1_VERSION)) {
+        GST_ERROR ("Error setting minimum TLS version to 1.1");
+      }
+    #else
+      context->set_options(::SSL_OP_NO_TLSv1);
+    #endif
+  } else if ("tls1.2" == min_tls) {
+    #if SUPPORTS_SET_MIN_TLS_PROTO
+      if (!::SSL_CTX_set_min_proto_version (context->native_handle(), TLS1_2_VERSION)) {
+        GST_ERROR ("Error setting minimum TLS version to 1.2");
+      }
+    #else
+      context->set_options(::SSL_OP_NO_TLSv1 | ::SSL_OP_NO_TLSv1_1);
+    #endif
+  } else {
+    GST_ERROR ("Unsupported minimum TLS version of '%s'.  Ignoring it.", min_tls.c_str());
+  }
 }
 
 void

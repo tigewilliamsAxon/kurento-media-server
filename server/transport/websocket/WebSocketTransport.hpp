@@ -26,6 +26,13 @@
 #include <iostream>
 #include <thread>
 #include <condition_variable>
+#include <openssl/ssl.h>
+
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+  #define SUPPORTS_SET_MIN_TLS_PROTO = 1
+#else
+  #define SUPPORTS_SET_MIN_TLS_PROTO = 0
+#endif
 
 typedef websocketpp::server<websocketpp::config::asio> WebSocketServer;
 typedef websocketpp::server<websocketpp::config::asio_tls>
@@ -59,6 +66,7 @@ private:
   websocketpp::connection_hdl getConnection (const std::string &sessionId);
 
   static void setCipherList (context_ptr context, const std::string &ciphers);
+  static void setMinTlsVersion (context_ptr context, const std::string &min_tls);
 
   template <typename ServerType>
   void processMessage (ServerType *s, websocketpp::connection_hdl hdl,

@@ -1,6 +1,10 @@
 {
   "mediaServer": {
     "crypto" : {
+      "//": "String value for the minimum TLS version to use",
+      "//": "Values: 'tls1.0', 'tls1.1', 'tls1.2'",
+      "//": "If not supplied, Kurento will try and resolve the highest supported version of TLS",
+      "min_tls": "",
       "//": "List of ciphers to use.  If not supplied, then the default set of ciphers from OpenSSL will be used.",
       "//": "Formatted as a colon delimited list.  See https://www.openssl.org/docs/manmaster/man1/ciphers.html0",
       "ciphers": ""
