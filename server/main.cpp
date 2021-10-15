@@ -61,7 +61,7 @@ namespace logging = boost::log;
 Glib::RefPtr<Glib::MainLoop> loop = Glib::MainLoop::create ();
 
 static void
-checkFIPSMode (boost::property_tree::ptree &config)
+toggleFIPSMode (boost::property_tree::ptree &config)
 {
   const bool useFips = config.get<bool> ("mediaServer.crypto.fips", false);
   const bool fipsEnabled = (FIPS_mode() != 0);
@@ -283,6 +283,8 @@ main (int argc, char **argv)
 
     killServerOnLowResources (*killResourceLimit);
   }
+
+  toggleFIPSMode (config);
 
   transport = createTransportFromConfig (config);
 
