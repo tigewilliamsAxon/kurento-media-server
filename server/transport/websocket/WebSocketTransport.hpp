@@ -29,9 +29,9 @@
 #include <openssl/ssl.h>
 
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-  #define SUPPORTS_SET_MIN_TLS_PROTO = 1
+  #define SUPPORTS_SET_MIN_TLS_PROTO 1
 #else
-  #define SUPPORTS_SET_MIN_TLS_PROTO = 0
+  #define SUPPORTS_SET_MIN_TLS_PROTO 0
 #endif
 
 typedef websocketpp::server<websocketpp::config::asio> WebSocketServer;
