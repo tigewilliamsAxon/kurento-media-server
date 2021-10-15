@@ -38,6 +38,7 @@
 #include <boost/optional.hpp>
 
 #include <openssl/crypto.h>
+#include <openssl/err.h>
 
 #include "logging.hpp"
 #include "modules.hpp"
