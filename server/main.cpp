@@ -37,6 +37,8 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/optional.hpp>
 
+#include <openssl/crypto.h>
+
 #include "logging.hpp"
 #include "modules.hpp"
 #include "loadConfig.hpp"
@@ -56,6 +58,36 @@ using namespace ::kurento;
 namespace logging = boost::log;
 
 Glib::RefPtr<Glib::MainLoop> loop = Glib::MainLoop::create ();
+
+static void
+checkFIPSMode (boost::property_tree::ptree &config)
+{
+  const bool useFips = config.get<bool> ("mediaServer.crypto.fips", false);
+  const bool fipsEnabled = (FIPS_mode() != 0);
+
+  if (useFips && fipsEnabled) {
+    GST_DEBUG ("FIPS mode already enabled");
+    return;
+  } else if (!useFips && !fipsEnabled) {
+    // In most cases, users don't need to supply the 'fips' config setting, so
+    // no need to spam the log them if it's not enabled and we don't want it enabled.
+    return;
+  } else if (useFips) {
+    GST_DEBUG ("Enabling FIPS mode");
+    if (!FIPS_mode_set(1 /*on*/))
+    {
+      GST_ERROR ("Error enabling FIPS mode: %s", ERR_error_string(ERR_get_error(), NULL));
+      exit (1);
+    }
+  } else {
+    GST_DEBUG ("Disabling FIPS mode");
+    if (!FIPS_mode_set(0 /*off*/))
+    {
+      GST_ERROR ("Error disabling FIPS mode: %s", ERR_error_string(ERR_get_error(), NULL));
+      exit (1);
+    }
+  }
+}
 
 static std::shared_ptr<Transport>
 createTransportFromConfig (boost::property_tree::ptree &config)
