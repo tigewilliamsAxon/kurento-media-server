@@ -67,21 +67,21 @@ toggleFIPSMode (boost::property_tree::ptree &config)
   const bool fipsEnabled = (FIPS_mode() != 0);
 
   if (useFips && fipsEnabled) {
-    GST_DEBUG ("FIPS mode already enabled");
+    GST_INFO ("FIPS mode already enabled");
     return;
   } else if (!useFips && !fipsEnabled) {
     // In most cases, users don't need to supply the 'fips' config setting, so
     // no need to spam the log them if it's not enabled and we don't want it enabled.
     return;
   } else if (useFips) {
-    GST_DEBUG ("Enabling FIPS mode");
+    GST_INFO ("Enabling FIPS mode");
     if (!FIPS_mode_set(1 /*on*/))
     {
       GST_ERROR ("Error enabling FIPS mode: %s", ERR_error_string(ERR_get_error(), NULL));
       exit (1);
     }
   } else {
-    GST_DEBUG ("Disabling FIPS mode");
+    GST_INFO ("Disabling FIPS mode");
     if (!FIPS_mode_set(0 /*off*/))
     {
       GST_ERROR ("Error disabling FIPS mode: %s", ERR_error_string(ERR_get_error(), NULL));
