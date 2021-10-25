@@ -1,6 +1,9 @@
 {
   "mediaServer": {
     "crypto" : {
+      "//": "Whether or not to use OpenSSL's FIPS mode",
+      "//": "Default: false",
+      "fips": false,
       "//": "String value for the minimum TLS version to use",
       "//": "Values: 'tls1.0', 'tls1.1', 'tls1.2'",
       "//": "If not supplied, Kurento will try and resolve the highest supported version of TLS",
